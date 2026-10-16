@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-16
+
 ### Added
 
 - Total Connect Comfort account (the e-mail and password of the Evohome app,
@@ -41,4 +43,5 @@ the notes of the version's GitHub Release.
   gateway loses its connection.
 - Feature and mode names in French or English.
 
-[Unreleased]: https://github.com/LM1LC3N7/gladys-evohome/commits/main
+[Unreleased]: https://github.com/LM1LC3N7/gladys-evohome/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/LM1LC3N7/gladys-evohome/releases/tag/v0.1.1
