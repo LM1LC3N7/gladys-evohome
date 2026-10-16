@@ -1,177 +1,686 @@
 {
   "manifest_version": 1,
   "type": "device",
-  "name": "Demo Devices Template",
+  "name": "Honeywell Evohome",
   "description": {
-    "en": "Starter template showing sensors, a switch, a dimmable light and a smart plug.",
-    "fr": "Template de démarrage : capteurs, interrupteur, lampe variable et prise connectée."
+    "en": "Honeywell / Resideo Evohome heating: zones, setpoints, system modes and hot water.",
+    "fr": "Chauffage Honeywell / Resideo Evohome : zones, consignes, modes du système, eau chaude."
   },
-  "version": "1.0.0",
-  "docker_image": "ghcr.io/gladysassistant/integration-template-js:1.0.0",
+  "version": "0.1.0",
+  "docker_image": "ghcr.io/lm1lc3n7/gladys-evohome:0.1.0",
   "gladys_version": ">=5.1.0",
-  "cover_image": "https://raw.githubusercontent.com/GladysAssistant/integration-template-js/master/cover.png",
-  "categories": ["lighting", "security", "environment"],
-  "transports": ["local", "cloud"],
+  "cover_image": "https://raw.githubusercontent.com/LM1LC3N7/gladys-evohome/main/cover.png",
+  "categories": ["climate"],
+  "transports": ["cloud"],
   "config_schema": [
     {
       "key": "intro",
       "type": "section",
-      "label": { "en": "Getting started", "fr": "Pour commencer" },
+      "label": {
+        "en": "Your Total Connect Comfort account",
+        "fr": "Votre compte Total Connect Comfort"
+      },
       "description": {
-        "en": "The demo weather station reads real data from the free Open-Meteo API: pick the coordinates to observe. No account, no API key.",
-        "fr": "La station météo de démonstration lit de vraies données via l'API gratuite Open-Meteo : choisissez les coordonnées à observer. Pas de compte, pas de clé d'API."
+        "en": "Brings your Honeywell / Resideo Evohome system into Gladys through the international Total Connect Comfort cloud (the one of the Evohome app, Europe): each heating zone with its temperature and setpoint, the system mode (Auto, Economy, Away, Day off, Custom, Heating off), the hot water, the faults, plus scene actions and triggers. Enter the e-mail and password of the app, then add the devices from the Discovery tab. Read every 5 minutes by default: Honeywell limits sign-ins and requests. For the US and Canada portal (mytotalconnectcomfort.com) or the Honeywell Home app (Lyric, T-series), use the other Honeywell integrations of the store. Unofficial, not affiliated with Honeywell or Resideo.",
+        "fr": "Amène votre système Honeywell / Resideo Evohome dans Gladys par le cloud Total Connect Comfort international (celui de l'application Evohome, Europe) : chaque zone de chauffage avec sa température et sa consigne, le mode du système (Auto, Économie, Absent, Jour de congé, Personnalisé, Chauffage arrêté), l'eau chaude, les défauts, et des actions et déclencheurs de scène. Saisissez l'e-mail et le mot de passe de l'application, puis ajoutez les appareils depuis l'onglet Découverte. Lu toutes les 5 minutes par défaut : Honeywell limite les connexions et les requêtes. Pour le portail États-Unis et Canada (mytotalconnectcomfort.com) ou l'application Honeywell Home (Lyric, série T), utilisez les autres intégrations Honeywell du store. Non officiel, sans lien avec Honeywell ni Resideo."
       },
       "links": [
         {
-          "url": "https://open-meteo.com/en/docs",
-          "label": { "en": "Open-Meteo documentation", "fr": "Documentation Open-Meteo" }
+          "url": "https://github.com/LM1LC3N7/gladys-evohome/blob/main/docs/fr.md",
+          "label": {
+            "en": "Guide (French)",
+            "fr": "Guide (français)"
+          }
+        },
+        {
+          "url": "https://github.com/LM1LC3N7/gladys-evohome/blob/main/docs/en.md",
+          "label": {
+            "en": "Guide (English)",
+            "fr": "Guide (anglais)"
+          }
+        },
+        {
+          "url": "https://international.mytotalconnectcomfort.com/",
+          "label": {
+            "en": "Total Connect Comfort (international)",
+            "fr": "Total Connect Comfort (international)"
+          }
         }
       ]
     },
     {
-      "key": "latitude",
-      "type": "number",
-      "label": { "en": "Latitude", "fr": "Latitude" },
-      "description": {
-        "en": "Latitude used for the demo weather sensor.",
-        "fr": "Latitude utilisée par le capteur météo de démonstration."
+      "key": "email",
+      "type": "string",
+      "label": {
+        "en": "Total Connect Comfort e-mail",
+        "fr": "E-mail Total Connect Comfort"
       },
-      "placeholder": { "en": "e.g. 48.8566", "fr": "ex. 48.8566" },
-      "required": true,
-      "default": 48.8566,
-      "min": -90,
-      "max": 90
+      "placeholder": {
+        "en": "you@example.com",
+        "fr": "vous@exemple.fr"
+      },
+      "required": true
     },
     {
-      "key": "longitude",
-      "type": "number",
-      "label": { "en": "Longitude", "fr": "Longitude" },
-      "description": {
-        "en": "Longitude used for the demo weather sensor.",
-        "fr": "Longitude utilisée par le capteur météo de démonstration."
+      "key": "password",
+      "type": "secret",
+      "label": {
+        "en": "Total Connect Comfort password",
+        "fr": "Mot de passe Total Connect Comfort"
       },
-      "placeholder": { "en": "e.g. 2.3522", "fr": "ex. 2.3522" },
-      "required": true,
-      "default": 2.3522,
-      "min": -180,
-      "max": 180
+      "required": true
     },
     {
-      "key": "unit",
-      "type": "select",
-      "label": { "en": "Temperature unit", "fr": "Unité de température" },
+      "key": "location",
+      "type": "string",
+      "label": {
+        "en": "Location (several homes only)",
+        "fr": "Emplacement (plusieurs logements seulement)"
+      },
+      "description": {
+        "en": "Name or number of the location to follow when the account has several. Empty: the first one. \"Test the connection\" lists them.",
+        "fr": "Nom ou numéro de l'emplacement à suivre quand le compte en a plusieurs. Vide : le premier. « Tester la connexion » les liste."
+      },
+      "placeholder": {
+        "en": "e.g. Home",
+        "fr": "ex. Maison"
+      },
       "required": false,
-      "default": "celsius",
+      "default": ""
+    },
+    {
+      "key": "override_mode",
+      "type": "select",
+      "label": {
+        "en": "Setpoint set from Gladys",
+        "fr": "Consigne réglée depuis Gladys"
+      },
+      "description": {
+        "en": "A zone setpoint changed from the dashboard holds for a while (then the schedule resumes), or until changed again.",
+        "fr": "Une consigne de zone changée depuis le tableau de bord tient un moment (puis le programme reprend), ou jusqu'au prochain changement."
+      },
+      "required": false,
+      "default": "temporary",
       "options": [
-        { "value": "celsius", "label": { "en": "Celsius", "fr": "Celsius" } },
-        { "value": "fahrenheit", "label": { "en": "Fahrenheit", "fr": "Fahrenheit" } }
+        {
+          "value": "temporary",
+          "label": {
+            "en": "For the duration below",
+            "fr": "Pendant la durée ci-dessous"
+          }
+        },
+        {
+          "value": "permanent",
+          "label": {
+            "en": "Until changed again",
+            "fr": "Jusqu'au prochain changement"
+          }
+        }
       ]
     },
     {
-      "key": "poll_frequency",
+      "key": "override_duration",
       "type": "number",
-      "label": { "en": "Refresh interval (s)", "fr": "Intervalle de rafraîchissement (s)" },
+      "label": {
+        "en": "Setpoint override duration (min)",
+        "fr": "Durée de la dérogation de consigne (min)"
+      },
       "description": {
-        "en": "How often sensors are polled, in seconds (one minute minimum).",
-        "fr": "Fréquence d'interrogation des capteurs, en secondes (une minute minimum)."
+        "en": "How long a setpoint set from Gladys holds, in minutes (10 to 1440, by steps of 10).",
+        "fr": "Durée d'une consigne réglée depuis Gladys, en minutes (10 à 1440, par pas de 10)."
+      },
+      "required": false,
+      "default": 60,
+      "min": 10,
+      "max": 1440
+    },
+    {
+      "key": "dhw_boost_duration",
+      "type": "number",
+      "label": {
+        "en": "Hot water boost duration (min)",
+        "fr": "Durée du boost d'eau chaude (min)"
+      },
+      "description": {
+        "en": "How long the hot water stays on with the Boost mode, in minutes (10 to 1440).",
+        "fr": "Durée de marche de l'eau chaude en mode Boost, en minutes (10 à 1440)."
+      },
+      "required": false,
+      "default": 60,
+      "min": 10,
+      "max": 1440
+    },
+    {
+      "key": "poll_interval",
+      "type": "number",
+      "label": {
+        "en": "Refresh interval (s)",
+        "fr": "Intervalle de rafraîchissement (s)"
+      },
+      "description": {
+        "en": "How often the status is read, in seconds (60 to 3600). One request per read; Honeywell blocks accounts that read too often.",
+        "fr": "Fréquence de lecture de l'état, en secondes (60 à 3600). Une requête par lecture ; Honeywell bloque les comptes qui lisent trop souvent."
       },
       "required": false,
       "default": 300,
       "min": 60,
       "max": 3600
+    },
+    {
+      "key": "language",
+      "type": "select",
+      "label": {
+        "en": "Language of the feature names",
+        "fr": "Langue des noms des fonctionnalités"
+      },
+      "description": {
+        "en": "Used for the names of the features and of the modes of the devices added from now on.",
+        "fr": "Sert aux noms des fonctionnalités et des modes des appareils ajoutés désormais."
+      },
+      "required": false,
+      "default": "fr",
+      "options": [
+        {
+          "value": "fr",
+          "label": {
+            "en": "French",
+            "fr": "Français"
+          }
+        },
+        {
+          "value": "en",
+          "label": {
+            "en": "English",
+            "fr": "Anglais"
+          }
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "key": "test_weather",
-      "label": { "en": "Test the weather provider", "fr": "Tester le fournisseur météo" },
-      "timeout_seconds": 30
-    },
+      "key": "test_connection",
+      "label": {
+        "en": "Test the connection",
+        "fr": "Tester la connexion"
+      },
+      "timeout_seconds": 60
+    }
+  ],
+  "scene_actions": [
     {
-      "key": "identify",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
+      "key": "set_system_mode",
+      "label": {
+        "en": "Set the Evohome system mode",
+        "fr": "Régler le mode du système Evohome"
+      },
+      "description": {
+        "en": "Auto, Economy, Away, Day off, Custom or Heating off, permanently or for a while (hours for Economy, days for Away, Day off and Custom).",
+        "fr": "Auto, Économie, Absent, Jour de congé, Personnalisé ou Chauffage arrêté, en permanence ou pour un temps (heures pour Économie, jours pour Absent, Jour de congé et Personnalisé)."
+      },
+      "timeout_seconds": 30,
       "fields": [
         {
-          "key": "device",
+          "key": "system",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
+          "label": {
+            "en": "Evohome system (empty: the only one)",
+            "fr": "Système Evohome (vide : le seul)"
+          }
+        },
+        {
+          "key": "mode",
+          "type": "select",
+          "label": {
+            "en": "Mode",
+            "fr": "Mode"
+          },
+          "required": true,
+          "options": [
+            {
+              "value": "Auto",
+              "label": {
+                "en": "Auto (schedule)",
+                "fr": "Auto (programme)"
+              }
+            },
+            {
+              "value": "AutoWithEco",
+              "label": {
+                "en": "Economy",
+                "fr": "Économie"
+              }
+            },
+            {
+              "value": "Away",
+              "label": {
+                "en": "Away",
+                "fr": "Absent"
+              }
+            },
+            {
+              "value": "DayOff",
+              "label": {
+                "en": "Day off",
+                "fr": "Jour de congé"
+              }
+            },
+            {
+              "value": "Custom",
+              "label": {
+                "en": "Custom",
+                "fr": "Personnalisé"
+              }
+            },
+            {
+              "value": "HeatingOff",
+              "label": {
+                "en": "Heating off",
+                "fr": "Chauffage arrêté"
+              }
+            },
+            {
+              "value": "AutoWithReset",
+              "label": {
+                "en": "Auto, every zone back to its schedule",
+                "fr": "Auto, chaque zone revient à son programme"
+              }
+            }
+          ]
+        },
+        {
+          "key": "hours",
+          "type": "number",
+          "label": {
+            "en": "For hours (Economy; empty: permanent)",
+            "fr": "Pendant (heures, Économie ; vide : permanent)"
+          },
+          "min": 0,
+          "max": 24
+        },
+        {
+          "key": "days",
+          "type": "number",
+          "label": {
+            "en": "For days, until midnight (Away, Day off, Custom; empty: permanent)",
+            "fr": "Pendant (jours, jusqu'à minuit, Absent, Jour de congé, Personnalisé ; vide : permanent)"
+          },
+          "min": 0,
+          "max": 99
+        }
+      ],
+      "outputs": [
+        {
+          "key": "until",
+          "type": "string",
+          "label": {
+            "en": "End of the mode (UTC, empty: permanent)",
+            "fr": "Fin du mode (UTC, vide : permanent)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "set_zone_setpoint",
+      "label": {
+        "en": "Set an Evohome zone setpoint",
+        "fr": "Régler la consigne d'une zone Evohome"
+      },
+      "description": {
+        "en": "Overrides the schedule of a zone, for a number of minutes or permanently.",
+        "fr": "Déroge au programme d'une zone, pendant un nombre de minutes ou en permanence."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "zone",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Zone",
+            "fr": "Zone"
+          },
           "required": true
+        },
+        {
+          "key": "temperature",
+          "type": "number",
+          "label": {
+            "en": "Setpoint (°C)",
+            "fr": "Consigne (°C)"
+          },
+          "required": true,
+          "min": 5,
+          "max": 35
+        },
+        {
+          "key": "minutes",
+          "type": "number",
+          "label": {
+            "en": "For minutes (empty: the configured default; 0: permanent)",
+            "fr": "Pendant (minutes ; vide : la valeur configurée ; 0 : permanent)"
+          },
+          "min": 0,
+          "max": 1440
+        }
+      ],
+      "outputs": [
+        {
+          "key": "until",
+          "type": "string",
+          "label": {
+            "en": "End of the override (UTC, empty: permanent)",
+            "fr": "Fin de la dérogation (UTC, vide : permanente)"
+          }
+        }
+      ]
+    },
+    {
+      "key": "clear_zone_override",
+      "label": {
+        "en": "Put an Evohome zone back on its schedule",
+        "fr": "Remettre une zone Evohome sur son programme"
+      },
+      "description": {
+        "en": "Cancels the override of a zone: it follows its schedule again.",
+        "fr": "Annule la dérogation d'une zone : elle suit à nouveau son programme."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "zone",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Zone",
+            "fr": "Zone"
+          },
+          "required": true
+        }
+      ]
+    },
+    {
+      "key": "set_hot_water",
+      "label": {
+        "en": "Set the Evohome hot water",
+        "fr": "Régler l'eau chaude Evohome"
+      },
+      "description": {
+        "en": "Hot water on or off, permanently or for a number of minutes, or back to its schedule.",
+        "fr": "Eau chaude en marche ou arrêtée, en permanence ou pendant un nombre de minutes, ou de retour sur son programme."
+      },
+      "timeout_seconds": 30,
+      "fields": [
+        {
+          "key": "hot_water",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Hot water",
+            "fr": "Eau chaude"
+          },
+          "required": true
+        },
+        {
+          "key": "state",
+          "type": "select",
+          "label": {
+            "en": "State",
+            "fr": "État"
+          },
+          "required": true,
+          "options": [
+            {
+              "value": "on",
+              "label": {
+                "en": "On",
+                "fr": "Marche"
+              }
+            },
+            {
+              "value": "off",
+              "label": {
+                "en": "Off",
+                "fr": "Arrêt"
+              }
+            },
+            {
+              "value": "auto",
+              "label": {
+                "en": "Schedule",
+                "fr": "Programme"
+              }
+            }
+          ]
+        },
+        {
+          "key": "minutes",
+          "type": "number",
+          "label": {
+            "en": "For minutes (on or off; empty: permanent)",
+            "fr": "Pendant (minutes, marche ou arrêt ; vide : permanent)"
+          },
+          "min": 0,
+          "max": 1440
+        }
+      ],
+      "outputs": [
+        {
+          "key": "until",
+          "type": "string",
+          "label": {
+            "en": "End of the override (UTC, empty: permanent)",
+            "fr": "Fin de la dérogation (UTC, vide : permanente)"
+          }
         }
       ]
     }
   ],
   "scene_triggers": [
     {
-      "key": "motion_detected",
-      "label": { "en": "Motion detected", "fr": "Mouvement détecté" },
+      "key": "system_mode_changed",
+      "label": {
+        "en": "Evohome system mode changed",
+        "fr": "Mode du système Evohome changé"
+      },
       "description": {
-        "en": "A demo motion sensor saw a person or an animal move.",
-        "fr": "Un détecteur de démonstration a vu bouger une personne ou un animal."
+        "en": "The mode of the system changed outside Gladys (on the controller, in the app, at the end of a temporary mode).",
+        "fr": "Le mode du système a changé hors de Gladys (sur le contrôleur, dans l'application, à la fin d'un mode temporaire)."
       },
       "fields": [
         {
-          "key": "device",
+          "key": "system",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Sensor", "fr": "Détecteur" }
+          "label": {
+            "en": "Evohome system",
+            "fr": "Système Evohome"
+          }
         },
         {
-          "key": "target",
+          "key": "mode",
           "type": "multi_select",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" },
+          "label": {
+            "en": "New mode",
+            "fr": "Nouveau mode"
+          },
           "options": [
-            { "value": "person", "label": { "en": "Person", "fr": "Personne" } },
-            { "value": "animal", "label": { "en": "Animal", "fr": "Animal" } }
+            {
+              "value": "Auto",
+              "label": {
+                "en": "Auto (schedule)",
+                "fr": "Auto (programme)"
+              }
+            },
+            {
+              "value": "AutoWithEco",
+              "label": {
+                "en": "Economy",
+                "fr": "Économie"
+              }
+            },
+            {
+              "value": "Away",
+              "label": {
+                "en": "Away",
+                "fr": "Absent"
+              }
+            },
+            {
+              "value": "DayOff",
+              "label": {
+                "en": "Day off",
+                "fr": "Jour de congé"
+              }
+            },
+            {
+              "value": "Custom",
+              "label": {
+                "en": "Custom",
+                "fr": "Personnalisé"
+              }
+            },
+            {
+              "value": "HeatingOff",
+              "label": {
+                "en": "Heating off",
+                "fr": "Chauffage arrêté"
+              }
+            }
           ]
         }
       ],
       "variables": [
         {
-          "key": "target",
+          "key": "system_name",
           "type": "string",
-          "label": { "en": "What moved", "fr": "Ce qui a bougé" }
+          "label": {
+            "en": "System name",
+            "fr": "Nom du système"
+          }
+        },
+        {
+          "key": "previous_mode",
+          "type": "string",
+          "label": {
+            "en": "Previous mode",
+            "fr": "Mode précédent"
+          }
+        },
+        {
+          "key": "permanent",
+          "type": "boolean",
+          "label": {
+            "en": "Permanent",
+            "fr": "Permanent"
+          }
+        },
+        {
+          "key": "until",
+          "type": "string",
+          "label": {
+            "en": "End of the mode (UTC)",
+            "fr": "Fin du mode (UTC)"
+          }
         }
       ]
-    }
-  ],
-  "scene_actions": [
+    },
     {
-      "key": "identify_device",
-      "label": { "en": "Identify a device", "fr": "Identifier un appareil" },
-      "description": {
-        "en": "Make a device signal itself (the demo light blinks).",
-        "fr": "Fait se signaler un appareil (la lampe de démonstration clignote)."
+      "key": "fault_detected",
+      "label": {
+        "en": "Evohome fault detected",
+        "fr": "Défaut Evohome détecté"
       },
-      "timeout_seconds": 15,
+      "description": {
+        "en": "A new fault appeared on the system, a zone or the hot water (low battery, lost communication…).",
+        "fr": "Un nouveau défaut est apparu sur le système, une zone ou l'eau chaude (batterie faible, communication perdue…)."
+      },
       "fields": [
         {
           "key": "device",
           "type": "select",
           "source": "devices",
-          "label": { "en": "Device", "fr": "Appareil" },
-          "required": true
+          "label": {
+            "en": "Device",
+            "fr": "Appareil"
+          }
         }
       ],
-      "outputs": [
+      "variables": [
         {
-          "key": "signalled",
-          "type": "boolean",
-          "label": { "en": "Device signalled", "fr": "Appareil signalé" }
+          "key": "device_name",
+          "type": "string",
+          "label": {
+            "en": "Device name",
+            "fr": "Nom de l'appareil"
+          }
+        },
+        {
+          "key": "fault_type",
+          "type": "string",
+          "label": {
+            "en": "Fault type",
+            "fr": "Type de défaut"
+          }
+        },
+        {
+          "key": "since",
+          "type": "string",
+          "label": {
+            "en": "Since (UTC)",
+            "fr": "Depuis (UTC)"
+          }
         }
       ]
-    }
-  ],
-  "widgets": [
+    },
     {
-      "key": "demo_status",
-      "label": { "en": "Demo status", "fr": "État de la démo" },
-      "description": {
-        "en": "Live temperature and plug power, plug connection and observed location.",
-        "fr": "Température et puissance en direct, connexion de la prise, position observée."
+      "key": "fault_cleared",
+      "label": {
+        "en": "Evohome fault cleared",
+        "fr": "Défaut Evohome résolu"
       },
-      "icon": "activity",
-      "action_timeout_seconds": 15
+      "description": {
+        "en": "A fault of the system, a zone or the hot water went away.",
+        "fr": "Un défaut du système, d'une zone ou de l'eau chaude a disparu."
+      },
+      "fields": [
+        {
+          "key": "device",
+          "type": "select",
+          "source": "devices",
+          "label": {
+            "en": "Device",
+            "fr": "Appareil"
+          }
+        }
+      ],
+      "variables": [
+        {
+          "key": "device_name",
+          "type": "string",
+          "label": {
+            "en": "Device name",
+            "fr": "Nom de l'appareil"
+          }
+        },
+        {
+          "key": "fault_type",
+          "type": "string",
+          "label": {
+            "en": "Fault type",
+            "fr": "Type de défaut"
+          }
+        },
+        {
+          "key": "since",
+          "type": "string",
+          "label": {
+            "en": "Since (UTC)",
+            "fr": "Depuis (UTC)"
+          }
+        }
+      ]
     }
   ]
 }

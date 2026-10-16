@@ -1,61 +1,150 @@
-# Demo Devices Template
+# Honeywell Evohome
 
-This is the user documentation of the integration. Gladys re-hosts this file
-and shows a permanent **Documentation** link to it in the Configuration screen
-(in the user's language, with English as the fallback) — it is when
-configuring that the user needs it most. Keep the short onboarding hints in
-the `section` blocks of the manifest `config_schema`; put the long
-step-by-step (screenshots, troubleshooting…) here.
+This integration brings a **Honeywell / Resideo Evohome** heating system into
+Gladys through the **international Total Connect Comfort** cloud, the one of
+the Evohome app (Europe, United Kingdom): the Evohome controller (Evotouch,
+Evohome Wi-Fi, Round Wireless with its RFG100 gateway), its heating zones and
+the hot water. It uses the account of the app. Unofficial, not affiliated with
+Honeywell or Resideo.
+
+> **Development version (0.1).** Built from the protocol of evohome-async (the
+> library of the Home Assistant evohome integration) and tested with simulated
+> answers, not with a real Evohome system yet. Feedback is welcome on the
+> GitHub repository.
+
+## Which Honeywell integration?
+
+| Your app or portal                                                | Your devices                                      | Integration                   |
+| ----------------------------------------------------------------- | ------------------------------------------------- | ----------------------------- |
+| Evohome app, international.mytotalconnectcomfort.com (Europe, UK) | Evohome, Evotouch, Round Wireless + RFG100        | **this one**                  |
+| Total Connect Comfort, mytotalconnectcomfort.com (US and Canada)  | RTH6580WF, RTH8580WF, RTH9580WF, VisionPRO Wi-Fi… | guim31/gladys-honeywell-tcc   |
+| Honeywell Home / Resideo app (developer API)                      | Lyric Round, T5, T6, T9, T10                      | guim31/gladys-honeywell-lyric |
 
 ## What you get
 
-Six demo devices show up after installation: a weather station (real data
-from Open-Meteo), a switch, a dimmable light, a smart plug with power
-metering, a motion sensor and a camera.
+| Device     | In Gladys                                                                                                                          |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| The system | system mode (settable), end of a temporary mode, fault, active faults                                                              |
+| Each zone  | temperature, setpoint (settable), heating on/off, setpoint mode (settable), end of the override, low battery, fault, active faults |
+| Hot water  | tank temperature, on/off (settable), mode (schedule, on, boost, off), end of the override, low battery, fault, active faults       |
 
-## Configuration
+- **System modes**: Auto (the schedule), Economy, Away, Day off, Custom,
+  Heating off, and "Auto, zones reset" (Auto and every zone back to its
+  schedule), as your controller offers them.
+- **Setpoint**: a setpoint changed from Gladys holds for 60 minutes by default
+  (then the zone goes back to its schedule), or until changed again: see the
+  options. The zone setpoint mode tells whether the zone follows its schedule
+  or holds an override, and until when.
+- **Heating off** on a zone holds it at its minimum (5 °C, frost protection)
+  until you choose **Heating** again, which puts it back on its schedule. A
+  zone also reads "off" when the whole system is in Heating off.
+- **Hot water**: on and off are permanent; **Boost** turns it on for the
+  configured time (60 minutes by default); **Schedule** puts it back on its
+  programme.
+- **Faults** come from the Evohome cloud: low batteries, lost communication
+  with a sensor, an actuator, the boiler or the gateway… "Fault" is 1 while one
+  is active, "Active faults" lists them, "Battery low" is 1 when one of them is
+  a low battery. When the gateway loses its connection, the badges of the
+  devices turn `unreachable` with an orange dot.
+- The temperatures have the resolution the cloud gives (often 0.5 °C), and
+  the cloud learns a change made on the controller within a few minutes.
 
-1. Open the **Configuration** tab of the integration.
-2. Set the **latitude** and **longitude** the demo weather station should
-   observe (they default to Paris), and pick your temperature unit.
-   The **refresh interval** sets how often the weather station and the
-   plug's power are read: every 5 minutes by default, every minute at most.
-3. Save: the devices appear in the **Discovery** tab, ready to be added.
+## Installation
 
-The **Prefer the local connection** toggle drives the demo plug: it reports
-the channel it actually uses as a badge (local or cloud), with an orange dot
-when it runs degraded (local refused, cloud fallback).
+1. Install the integration from the Gladys store.
+2. In the **Configuration** tab, enter the e-mail and password of your Total
+   Connect Comfort account (the ones of the Evohome app), then save.
+3. The status says "Connected to Evohome "My Home": 6 zones and hot water".
+4. Open the **Discovery** tab and add the devices you want. Their values
+   arrive as soon as they are added.
 
-## Actions
+The **Test the connection** button reads the cloud again and lists the
+locations of the account, the mode and the faults.
 
-- **Test the weather provider** — performs a live request to Open-Meteo and
-  shows the current temperature and humidity under the button.
-- **Identify a device** — pick one of your devices in the list and it will
-  signal itself (the demo light "blinks" in the logs).
+### Several homes
+
+An account can hold several locations. The integration follows one: the
+first by default, or the one whose name or number you type in **Location**.
+"Test the connection" lists the names and numbers.
 
 ## Scenes
 
-The integration adds its own cards to the scene editor (Gladys 5.1 or
-later), under the **Integrations** category:
+Four scene actions:
 
-- **Motion detected** (trigger) — starts the scene when a demo motion sensor
-  sees something move. Optionally pick the sensor and what moved (person,
-  animal); left empty, any detection matches. The following actions can
-  read what moved with `{{triggerEvent.data.target}}`.
-- **Identify a device** (action) — makes the chosen device signal itself.
-  It returns whether the device could signal itself, so the following
-  actions can depend on it.
+- **Set the Evohome system mode**: a mode, permanently or for a while: hours
+  for Economy (until the end of the hour, 24 h at most), days for Away, Day
+  off and Custom (until midnight, today counting as the first day).
+- **Set an Evohome zone setpoint**: a zone and a temperature, for a number of
+  minutes (empty: the default of the configuration; 0: permanently).
+- **Put an Evohome zone back on its schedule**.
+- **Set the Evohome hot water**: on, off or schedule, permanently or for a
+  number of minutes.
 
-## Dashboard
+They return `until`, the end of the override (UTC, empty when permanent).
 
-Add the **Demo status** widget to a dashboard: it shows the live
-temperature of the weather station and the power of the office plug, the
-connection the plug currently uses (orange when degraded) and the observed
-location. Its **Identify the light** button makes the demo light signal
-itself.
+Three scene triggers:
+
+- **Evohome system mode changed**: the mode changed outside Gladys (on the
+  controller, in the app, at the end of a temporary mode). Variables:
+  `system_name`, `mode`, `previous_mode`, `permanent`, `until`. A mode set
+  from Gladys does not fire it.
+- **Evohome fault detected** and **Evohome fault cleared**: for one device or
+  all; variables `device_name`, `fault_type` (e.g. `TempZoneActuatorLowBattery`)
+  and `since`.
+
+The faults already active when the integration starts fire nothing. The
+temperatures and setpoints work with the usual "Device state changed" trigger.
+
+## How often it reads
+
+Honeywell limits the number of sign-ins and requests per account (a lockout of
+an hour has been reported). The integration:
+
+- signs in once and keeps the session (about 30 minutes, renewed with its
+  refresh token) in its `/data` folder, so a restart does not sign in again;
+- reads the status of the location in one request, every 5 minutes by
+  default (60 s minimum, like Home Assistant), plus one read 15 s after a
+  command;
+- reads the installation (zones, hot water, allowed modes) at start-up, once
+  a day and on **Scan** in the Discovery tab (at most every 10 minutes);
+- waits 1, 2, 5, 10 then 15 minutes after errors, and as long as Honeywell
+  asks after a "too many requests" (30 minutes otherwise, an hour after too
+  many sign-ins).
+
+## Options
+
+| Option                           | Default               | Purpose                                                          |
+| -------------------------------- | --------------------- | ---------------------------------------------------------------- |
+| E-mail, password                 | —                     | the Total Connect Comfort account of the Evohome app             |
+| Location                         | empty (the first one) | the location to follow when the account has several              |
+| Setpoint set from Gladys         | for the duration      | a zone setpoint holds for a while, or until changed again        |
+| Setpoint override duration (min) | 60                    | how long a setpoint set from Gladys holds (10 to 1440)           |
+| Hot water boost duration (min)   | 60                    | how long Boost keeps the hot water on (10 to 1440)               |
+| Refresh interval (s)             | 300                   | how often the status is read (60 to 3600)                        |
+| Language of the feature names    | French                | names of the features and modes of the devices added from now on |
 
 ## Troubleshooting
 
-The integration logs everything it does: check the integration logs from the
-Gladys UI (or `docker logs` on the host) with `LOG_LEVEL=debug` for the full
-detail.
+- **"Total Connect Comfort refused the e-mail or password"**: check them on
+  international.mytotalconnectcomfort.com, then in the configuration. The
+  integration does not retry by itself: it waits for a change or a click on
+  **Test the connection**.
+- **"Too many sign-ins"** or **"asks to slow down"**: Honeywell blocks the
+  account for a while. Do not lower the refresh interval; stop other tools
+  that read the same account (Home Assistant, Homebridge…) if you can.
+- **"Total Connect Comfort cannot be reached"**: the cloud or your Internet
+  access is down (service status: https://status.resideo.com).
+- **A zone has no temperature**: its sensor does not answer the controller
+  (see its faults).
+- **A US / Canada thermostat or a Lyric / T-series**: this is not the right
+  integration, see the table at the top.
+
+## Privacy
+
+The e-mail and password are stored by Gladys as a secret (never sent back to
+the browser). The integration only sends them to `tccna.resideo.com`, the
+Total Connect Comfort cloud of the Evohome app, to open a session; it keeps
+the access and refresh tokens and the user id in its `/data` folder (with a
+hash of the e-mail, never the password). Honeywell, Evohome and Total Connect
+Comfort are trademarks of their owners; this integration is not affiliated
+with Honeywell or Resideo.

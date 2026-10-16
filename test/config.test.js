@@ -1,33 +1,76 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeConfig, DEFAULT_CONFIG } from '../src/config.js';
+import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { DEFAULTS, accountKey, normalizeConfig } from '../src/config.js';
+import { fileStore, normalizeMemory } from '../src/store.js';
 
-test('normalizeConfig returns the defaults when called with no argument', () => {
-  assert.deepEqual(normalizeConfig(), DEFAULT_CONFIG);
+test('the defaults, mirrored by the manifest', () => {
+  assert.deepEqual(normalizeConfig(), {
+    email: '',
+    password: '',
+    account: '',
+    location: '',
+    overrideMode: 'temporary',
+    overrideDuration: DEFAULTS.override_duration,
+    boostDuration: DEFAULTS.dhw_boost_duration,
+    pollInterval: 300,
+    language: 'fr',
+  });
 });
 
-test('normalizeConfig keeps user values over the defaults', () => {
-  const config = normalizeConfig({ latitude: 45.5, longitude: -73.6, unit: 'fahrenheit' });
-  assert.equal(config.latitude, 45.5);
-  assert.equal(config.longitude, -73.6);
-  assert.equal(config.unit, 'fahrenheit');
+test('values bounded and cleaned', () => {
+  const config = normalizeConfig({
+    email: '  User@Example.com ',
+    password: ' secret ',
+    location: ' Home ',
+    override_mode: 'PERMANENT',
+    override_duration: '5',
+    dhw_boost_duration: 99999,
+    poll_interval: 10,
+    language: 'EN',
+  });
+  assert.equal(config.email, 'User@Example.com');
+  assert.equal(config.password, ' secret ', 'a password is kept as typed');
+  assert.equal(config.account, accountKey('user@example.com'));
+  assert.equal(config.location, 'Home');
+  assert.equal(config.overrideMode, 'permanent');
+  assert.equal(config.overrideDuration, 10);
+  assert.equal(config.boostDuration, 1440);
+  assert.equal(config.pollInterval, 60, 'never faster than once a minute');
+  assert.equal(config.language, 'en');
+  const odd = normalizeConfig({ override_mode: 'forever', poll_interval: 'often', language: 'de' });
+  assert.deepEqual([odd.overrideMode, odd.pollInterval, odd.language], ['temporary', 300, 'fr']);
 });
 
-test('normalizeConfig coerces numeric strings coming from a form', () => {
-  const config = normalizeConfig({ latitude: '48.8', longitude: '2.3', poll_frequency: '600' });
-  assert.equal(config.latitude, 48.8);
-  assert.equal(config.longitude, 2.3);
-  assert.equal(config.poll_frequency, 600);
-  assert.equal(typeof config.poll_frequency, 'number');
+test('the account key hides the e-mail', () => {
+  assert.match(accountKey('a@b.c'), /^[0-9a-f]{16}$/);
+  assert.equal(accountKey(' A@B.C '), accountKey('a@b.c'));
 });
 
-test('normalizeConfig falls back to the default for a missing numeric field', () => {
-  const config = normalizeConfig({ unit: 'celsius' });
-  assert.equal(config.poll_frequency, DEFAULT_CONFIG.poll_frequency);
+test('the persisted state, repaired', () => {
+  assert.deepEqual(normalizeMemory(null), { session: null });
+  assert.deepEqual(normalizeMemory({ session: { account: 'k' } }), { session: null });
+  assert.deepEqual(
+    normalizeMemory({ session: { account: 'k', refreshToken: 'r', expiresAt: 'x', userId: 7 } }),
+    { session: { account: 'k', accessToken: null, expiresAt: 0, refreshToken: 'r', userId: null } },
+  );
+  assert.deepEqual(
+    normalizeMemory({
+      session: { account: 'k', accessToken: 'a', expiresAt: 5, refreshToken: 'r', userId: '1' },
+    }),
+    { session: { account: 'k', accessToken: 'a', expiresAt: 5, refreshToken: 'r', userId: '1' } },
+  );
 });
 
-test('GLADYS_PREFER_LOCAL defaults to true and only an explicit false disables it', () => {
-  assert.equal(normalizeConfig().GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: true }).GLADYS_PREFER_LOCAL, true);
-  assert.equal(normalizeConfig({ GLADYS_PREFER_LOCAL: false }).GLADYS_PREFER_LOCAL, false);
+test('the state file: written atomically, readable by its owner only', async (t) => {
+  const dir = await mkdtemp(join(tmpdir(), 'evohome-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  const store = fileStore(join(dir, 'state.json'));
+  assert.equal(await store.load(), null);
+  await store.save({ session: { account: 'k' } });
+  assert.deepEqual(await store.load(), { session: { account: 'k' } });
+  assert.equal(JSON.parse(await readFile(join(dir, 'state.json'), 'utf8')).session.account, 'k');
+  assert.equal((await stat(join(dir, 'state.json'))).mode & 0o777, 0o600);
 });

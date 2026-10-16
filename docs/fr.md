@@ -1,67 +1,161 @@
-# Template de démonstration
+# Honeywell Evohome
 
-Ceci est la documentation utilisateur de l'intégration. Gladys ré-héberge ce
-fichier et affiche un lien **Documentation** permanent vers lui dans l'écran
-de configuration (dans la langue de l'utilisateur, avec l'anglais en repli) —
-c'est au moment de configurer que l'utilisateur en a le plus besoin. Gardez
-les courtes indications d'accueil dans les blocs `section` du `config_schema`
-du manifest ; mettez ici le pas-à-pas détaillé (captures d'écran, dépannage…).
+Cette intégration amène dans Gladys un chauffage **Honeywell / Resideo
+Evohome** par le cloud **Total Connect Comfort international**, celui de
+l'application Evohome (Europe, Royaume-Uni) : le contrôleur Evohome (Evotouch,
+Evohome Wi-Fi, Round Wireless avec sa passerelle RFG100), ses zones de
+chauffage et l'eau chaude. Elle utilise le compte de l'application. Non
+officielle, sans lien avec Honeywell ni Resideo.
+
+> **Version de développement (0.1).** Réalisée d'après le protocole
+> d'evohome-async (la bibliothèque de l'intégration evohome de Home Assistant)
+> et testée avec des réponses simulées, pas encore avec un vrai système
+> Evohome. Vos retours sont les bienvenus sur le dépôt GitHub.
+
+## Quelle intégration Honeywell ?
+
+| Votre application ou portail                                          | Vos appareils                                     | Intégration                   |
+| --------------------------------------------------------------------- | ------------------------------------------------- | ----------------------------- |
+| Application Evohome, international.mytotalconnectcomfort.com (Europe) | Evohome, Evotouch, Round Wireless + RFG100        | **celle-ci**                  |
+| Total Connect Comfort, mytotalconnectcomfort.com (États-Unis, Canada) | RTH6580WF, RTH8580WF, RTH9580WF, VisionPRO Wi-Fi… | guim31/gladys-honeywell-tcc   |
+| Application Honeywell Home / Resideo (API développeur)                | Lyric Round, T5, T6, T9, T10                      | guim31/gladys-honeywell-lyric |
 
 ## Ce que vous obtenez
 
-Six appareils de démonstration apparaissent après l'installation : une
-station météo (vraies données Open-Meteo), un interrupteur, une lampe
-variable, une prise connectée avec mesure de puissance, un détecteur de
-mouvement et une caméra.
+| Appareil    | Dans Gladys                                                                                                                                           |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Le système  | mode du système (réglable), fin d'un mode temporaire, défaut, défauts actifs                                                                          |
+| Chaque zone | température, consigne (réglable), chauffage marche/arrêt, mode de consigne (réglable), fin de la dérogation, batterie faible, défaut, défauts actifs  |
+| Eau chaude  | température du ballon, marche/arrêt (réglable), mode (programme, marche, boost, arrêt), fin de la dérogation, batterie faible, défaut, défauts actifs |
 
-## Configuration
+- **Modes du système** : Auto (le programme), Économie, Absent, Jour de
+  congé, Personnalisé, Chauffage arrêté, et « Auto, zones réinitialisées »
+  (Auto et chaque zone revient à son programme), selon ce que propose votre
+  contrôleur.
+- **Consigne** : une consigne changée depuis Gladys tient 60 minutes par
+  défaut (puis la zone reprend son programme), ou jusqu'au prochain
+  changement : voir les options. Le mode de consigne de la zone indique si
+  elle suit son programme ou tient une dérogation, et jusqu'à quand.
+- **Chauffage arrêté** sur une zone la maintient à son minimum (5 °C,
+  hors-gel) jusqu'à ce que vous choisissiez **Chauffage**, qui la remet sur
+  son programme. Une zone se lit aussi « arrêt » quand tout le système est en
+  Chauffage arrêté.
+- **Eau chaude** : marche et arrêt sont permanents ; **Boost** la met en
+  marche pour la durée configurée (60 minutes par défaut) ; **Programme** la
+  remet sur son programme.
+- **Défauts** : ceux du cloud Evohome (batterie faible, communication perdue
+  avec un capteur, un actionneur, la chaudière ou la passerelle…). « Défaut »
+  vaut 1 tant qu'un défaut est actif, « Défauts actifs » les liste,
+  « Batterie faible » vaut 1 quand l'un d'eux est une batterie faible. Quand
+  la passerelle perd sa connexion, le badge des appareils passe à
+  `unreachable` avec un point orange.
+- Les températures ont la précision que donne le cloud (souvent 0,5 °C), et
+  le cloud apprend en quelques minutes un changement fait sur le contrôleur.
 
-1. Ouvrez l'onglet **Configuration** de l'intégration.
-2. Renseignez la **latitude** et la **longitude** que la station météo de
-   démonstration doit observer (Paris par défaut), et choisissez votre unité
-   de température. L'**intervalle de rafraîchissement** règle la fréquence
-   de lecture de la station météo et de la puissance de la prise : toutes
-   les 5 minutes par défaut, toutes les minutes au plus.
-3. Enregistrez : les appareils apparaissent dans l'onglet **Découverte**,
-   prêts à être ajoutés.
+## Installation
 
-Le réglage **Préférer la connexion locale** pilote la prise de
-démonstration : elle affiche en badge le canal réellement utilisé (local ou
-cloud), avec un point orange quand elle fonctionne en mode dégradé (local
-refusé, bascule cloud).
+1. Installez l'intégration depuis le store Gladys.
+2. Dans l'onglet **Configuration**, saisissez l'e-mail et le mot de passe de
+   votre compte Total Connect Comfort (ceux de l'application Evohome), puis
+   enregistrez.
+3. Le statut indique « Connecté à Evohome « Maison » : 6 zones et eau chaude ».
+4. Ouvrez l'onglet **Découverte** et ajoutez les appareils voulus. Leurs
+   valeurs arrivent dès leur ajout.
 
-## Actions
+Le bouton **Tester la connexion** relit le cloud et liste les emplacements du
+compte, le mode et les défauts.
 
-- **Tester le fournisseur météo** — effectue une requête en direct vers
-  Open-Meteo et affiche la température et l'humidité actuelles sous le
-  bouton.
-- **Identifier un appareil** — choisissez un de vos appareils dans la liste
-  et il se signale (la lampe de démonstration « clignote » dans les logs).
+### Plusieurs logements
+
+Un compte peut avoir plusieurs emplacements. L'intégration en suit un : le
+premier par défaut, ou celui dont vous saisissez le nom ou le numéro dans
+**Emplacement**. « Tester la connexion » donne les noms et les numéros.
 
 ## Scènes
 
-L'intégration ajoute ses propres cartes à l'éditeur de scènes (Gladys 5.1
-ou plus récent), dans la catégorie **Intégrations** :
+Quatre actions de scène :
 
-- **Mouvement détecté** (déclencheur) — lance la scène quand un détecteur
-  de démonstration voit bouger quelque chose. Choisissez éventuellement le
-  détecteur et ce qui a bougé (personne, animal) ; laissés vides, toute
-  détection correspond. Les actions suivantes peuvent lire ce qui a bougé
-  avec `{{triggerEvent.data.target}}`.
-- **Identifier un appareil** (action) — fait se signaler l'appareil choisi.
-  Elle indique si l'appareil a pu se signaler, pour que les actions
-  suivantes puissent en dépendre.
+- **Régler le mode du système Evohome** : un mode, en permanence ou pour un
+  temps : des heures pour Économie (jusqu'à la fin de l'heure, 24 h au plus),
+  des jours pour Absent, Jour de congé et Personnalisé (jusqu'à minuit,
+  aujourd'hui comptant comme premier jour).
+- **Régler la consigne d'une zone Evohome** : une zone et une température,
+  pendant un nombre de minutes (vide : la valeur de la configuration ; 0 : en
+  permanence).
+- **Remettre une zone Evohome sur son programme**.
+- **Régler l'eau chaude Evohome** : marche, arrêt ou programme, en permanence
+  ou pendant un nombre de minutes.
 
-## Tableau de bord
+Elles renvoient `until`, la fin de la dérogation (UTC, vide si permanente).
 
-Ajoutez le widget **État de la démo** à un tableau de bord : il affiche en
-direct la température de la station météo et la puissance de la prise du
-bureau, la connexion utilisée par la prise (en orange si dégradée) et la
-position observée. Son bouton **Identifier la lampe** fait se signaler la
-lampe de démonstration.
+Trois déclencheurs de scène :
+
+- **Mode du système Evohome changé** : le mode a changé hors de Gladys (sur
+  le contrôleur, dans l'application, à la fin d'un mode temporaire).
+  Variables : `system_name`, `mode`, `previous_mode`, `permanent`, `until`.
+  Un mode réglé depuis Gladys ne le déclenche pas.
+- **Défaut Evohome détecté** et **Défaut Evohome résolu** : pour un appareil
+  ou tous ; variables `device_name`, `fault_type` (ex.
+  `TempZoneActuatorLowBattery`) et `since`.
+
+Les défauts déjà actifs au démarrage de l'intégration ne déclenchent rien.
+Les températures et consignes fonctionnent avec le déclencheur habituel
+« Changement d'état d'un appareil ».
+
+## Fréquence de lecture
+
+Honeywell limite le nombre de connexions et de requêtes par compte (un
+blocage d'une heure a été signalé). L'intégration :
+
+- se connecte une fois et garde la session (environ 30 minutes, renouvelée
+  avec son jeton de rafraîchissement) dans son dossier `/data` : un
+  redémarrage ne se reconnecte pas ;
+- lit l'état de l'emplacement en une requête, toutes les 5 minutes par
+  défaut (60 s minimum, comme Home Assistant), plus une lecture 15 s après
+  une commande ;
+- lit l'installation (zones, eau chaude, modes permis) au démarrage, une
+  fois par jour et sur **Scanner** dans l'onglet Découverte (au plus toutes
+  les 10 minutes) ;
+- attend 1, 2, 5, 10 puis 15 minutes après une erreur, et aussi longtemps que
+  Honeywell le demande après un « trop de requêtes » (30 minutes sinon, une
+  heure après trop de connexions).
+
+## Options
+
+| Option                                   | Défaut            | Rôle                                                                  |
+| ---------------------------------------- | ----------------- | --------------------------------------------------------------------- |
+| E-mail, mot de passe                     | —                 | le compte Total Connect Comfort de l'application Evohome              |
+| Emplacement                              | vide (le premier) | l'emplacement à suivre quand le compte en a plusieurs                 |
+| Consigne réglée depuis Gladys            | pendant la durée  | une consigne de zone tient un moment, ou jusqu'au prochain changement |
+| Durée de la dérogation de consigne (min) | 60                | durée d'une consigne réglée depuis Gladys (10 à 1440)                 |
+| Durée du boost d'eau chaude (min)        | 60                | durée de marche de l'eau chaude en Boost (10 à 1440)                  |
+| Intervalle de rafraîchissement (s)       | 300               | fréquence de lecture de l'état (60 à 3600)                            |
+| Langue des noms des fonctionnalités      | Français          | noms des fonctionnalités et des modes des appareils ajoutés désormais |
 
 ## Dépannage
 
-L'intégration journalise tout ce qu'elle fait : consultez les logs de
-l'intégration depuis l'interface Gladys (ou `docker logs` sur l'hôte) avec
-`LOG_LEVEL=debug` pour le détail complet.
+- **« Total Connect Comfort a refusé l'e-mail ou le mot de passe »** :
+  vérifiez-les sur international.mytotalconnectcomfort.com, puis dans la
+  configuration. L'intégration ne réessaie pas seule : elle attend une
+  modification ou un clic sur **Tester la connexion**.
+- **« Trop de connexions »** ou **« demande de ralentir »** : Honeywell bloque
+  le compte un moment. Ne baissez pas l'intervalle de rafraîchissement ;
+  arrêtez si possible les autres outils qui lisent le même compte (Home
+  Assistant, Homebridge…).
+- **« Total Connect Comfort est injoignable »** : le cloud ou votre accès
+  Internet est en panne (état du service : https://status.resideo.com).
+- **Une zone n'a pas de température** : son capteur ne répond plus au
+  contrôleur (voir ses défauts).
+- **Un thermostat américain ou canadien, ou un Lyric / série T** : ce n'est
+  pas la bonne intégration, voir le tableau en haut.
+
+## Vie privée
+
+L'e-mail et le mot de passe sont stockés par Gladys comme un secret (jamais
+renvoyé au navigateur). L'intégration ne les envoie qu'à `tccna.resideo.com`,
+le cloud Total Connect Comfort de l'application Evohome, pour ouvrir une
+session ; elle garde les jetons d'accès et de rafraîchissement et
+l'identifiant d'utilisateur dans son dossier `/data` (avec une empreinte de
+l'e-mail, jamais le mot de passe). Honeywell, Evohome et Total Connect Comfort
+sont des marques de leurs propriétaires ; cette intégration est sans lien avec
+Honeywell ni Resideo.
