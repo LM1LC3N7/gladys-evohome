@@ -1,6 +1,6 @@
 {
   "name": "gladys-evohome",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "description": "Gladys Assistant external integration for Honeywell / Resideo Evohome (Total Connect Comfort international). Unofficial, not affiliated with Honeywell or Resideo.",
   "type": "module",

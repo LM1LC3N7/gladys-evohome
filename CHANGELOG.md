@@ -10,6 +10,8 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-24
+
 ### Added
 
 - **Allow the commands** option, off by default: until it is on, a zone
@@ -61,5 +63,6 @@ the notes of the version's GitHub Release.
   gateway loses its connection.
 - Feature and mode names in French or English.
 
-[Unreleased]: https://github.com/LM1LC3N7/gladys-evohome/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/LM1LC3N7/gladys-evohome/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/LM1LC3N7/gladys-evohome/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/LM1LC3N7/gladys-evohome/releases/tag/v0.1.1
