@@ -35,6 +35,9 @@ Gladys ⇄ SDK ⇄ src/handlers.js ⇄ src/app.js (EvohomeApp) ⇄ src/client.js
                                    └─ src/store.js      session and user id (/data)
 ```
 
+- **Commands**: behind "Allow the commands" (off by default): zone setpoints,
+  system modes, hot water on/Boost, back to the schedule. Heating off, a zone
+  off and the hot water off always go (`requireCommands` in `src/app.js`).
 - **Account**: e-mail and password of the Evohome app (`secret` field).
   `POST /Auth/OAuth/Token` with the app's client id (password grant, scope
   `EMEA-V1-Basic EMEA-V1-Anonymous`) returns an access token (~30 minutes)

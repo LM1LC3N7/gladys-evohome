@@ -17,7 +17,17 @@ test('the defaults, mirrored by the manifest', () => {
     boostDuration: DEFAULTS.dhw_boost_duration,
     pollInterval: 300,
     language: 'fr',
+    allowCommands: false,
   });
+});
+
+test('allow_commands is off by default, on only for true or "true"', () => {
+  assert.equal(DEFAULTS.allow_commands, false);
+  assert.equal(normalizeConfig({ allow_commands: true }).allowCommands, true);
+  assert.equal(normalizeConfig({ allow_commands: 'true' }).allowCommands, true);
+  for (const value of [1, 'yes', 'on', 'false', false, null, undefined, '']) {
+    assert.equal(normalizeConfig({ allow_commands: value }).allowCommands, false, String(value));
+  }
 });
 
 test('values bounded and cleaned', () => {

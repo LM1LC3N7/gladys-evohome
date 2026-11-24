@@ -113,15 +113,23 @@ an hour has been reported). The integration:
 
 ## Options
 
-| Option                           | Default               | Purpose                                                          |
-| -------------------------------- | --------------------- | ---------------------------------------------------------------- |
-| E-mail, password                 | —                     | the Total Connect Comfort account of the Evohome app             |
-| Location                         | empty (the first one) | the location to follow when the account has several              |
-| Setpoint set from Gladys         | for the duration      | a zone setpoint holds for a while, or until changed again        |
-| Setpoint override duration (min) | 60                    | how long a setpoint set from Gladys holds (10 to 1440)           |
-| Hot water boost duration (min)   | 60                    | how long Boost keeps the hot water on (10 to 1440)               |
-| Refresh interval (s)             | 300                   | how often the status is read (60 to 3600)                        |
-| Language of the feature names    | French                | names of the features and modes of the devices added from now on |
+| Option                           | Default               | Purpose                                                             |
+| -------------------------------- | --------------------- | ------------------------------------------------------------------- |
+| E-mail, password                 | —                     | the Total Connect Comfort account of the Evohome app                |
+| Location                         | empty (the first one) | the location to follow when the account has several                 |
+| Setpoint set from Gladys         | for the duration      | a zone setpoint holds for a while, or until changed again           |
+| Setpoint override duration (min) | 60                    | how long a setpoint set from Gladys holds (10 to 1440)              |
+| Hot water boost duration (min)   | 60                    | how long Boost keeps the hot water on (10 to 1440)                  |
+| Refresh interval (s)             | 300                   | how often the status is read (60 to 3600)                           |
+| Language of the feature names    | French                | names of the features and modes of the devices added from now on    |
+| Allow the commands               | off                   | setpoints, modes, hot water on and back to the schedule from Gladys |
+
+Until **Allow the commands** is on, the dashboard and the scenes only read:
+a zone setpoint, a system mode, the hot water on or Boost, "Follow schedule"
+and "Back to the schedule" are refused with a message. Switching off never
+needs it: the system mode **Heating off**, a zone **off** (held at its
+minimum) and the hot water **off** always work, so a "turn everything off"
+scene keeps working.
 
 ## Troubleshooting
 

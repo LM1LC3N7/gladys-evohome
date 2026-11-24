@@ -671,20 +671,35 @@ export class EvohomeApp {
     }
   }
 
+  /**
+   * Anything that may heat (a setpoint, a mode, the hot water on, back to the
+   * schedule) needs "Allow the commands"; switching off never does: the system
+   * mode Heating off, a zone off (its minimum, permanent), the hot water off.
+   */
+  requireCommands() {
+    if (!this.config.allowCommands) {
+      throw userError(T.commandsDisabled, this.config.language);
+    }
+  }
+
   async command(entry, value) {
     const { kind, role, entity } = entry;
     if (kind === 'system' && role === 'mode') {
       return this.setSystemMode(entity, String(value));
     }
     if (kind === 'zone' && role === 'setpoint') {
+      this.requireCommands();
       return this.setSetpoint(entity, Number(value));
     }
     if (kind === 'zone' && role === 'heating-mode') {
-      return Number(value) === GLADYS.THERMOSTAT_MODE.OFF
-        ? this.setSetpoint(entity, entity.min, { permanent: true })
-        : this.clearOverride(entity);
+      if (Number(value) === GLADYS.THERMOSTAT_MODE.OFF) {
+        return this.setSetpoint(entity, entity.min, { permanent: true });
+      }
+      this.requireCommands();
+      return this.clearOverride(entity);
     }
     if (kind === 'zone' && role === 'setpoint-mode') {
+      this.requireCommands();
       return this.setSetpointMode(entity, String(value));
     }
     if (kind === 'dhw' && role === 'state') {
@@ -714,6 +729,9 @@ export class EvohomeApp {
   async setSystemMode(system, mode, { hours, days } = {}) {
     const language = this.config.language;
     const allowed = system.modes.find((m) => m.mode === mode);
+    if (mode !== 'HeatingOff') {
+      this.requireCommands();
+    }
     if (!SYSTEM_MODES.includes(mode) || !allowed) {
       throw userError(T.modeNotAllowed(mode), language);
     }
@@ -781,6 +799,9 @@ export class EvohomeApp {
 
   /** Hot water `on`, `off` (permanent, or for `minutes`) or `auto` (its schedule). */
   async setHotWater(dhw, choice, minutes) {
+    if (choice !== 'off') {
+      this.requireCommands();
+    }
     if (choice === 'auto') {
       await this.client.setDhwState(dhw.id, { mode: SETPOINT_MODES.FOLLOW });
       this.logger.info('Hot water: back to its schedule');
@@ -833,6 +854,7 @@ export class EvohomeApp {
   sceneZoneSetpoint(fields = {}) {
     return this.sceneAction(() => {
       const zone = this.sceneTarget(fields.zone, 'zone');
+      this.requireCommands();
       const minutes = Number(fields.minutes);
       return this.setSetpoint(zone, Number(fields.temperature), {
         minutes:
@@ -847,7 +869,9 @@ export class EvohomeApp {
 
   sceneClearOverride(fields = {}) {
     return this.sceneAction(async () => {
-      await this.clearOverride(this.sceneTarget(fields.zone, 'zone'));
+      const zone = this.sceneTarget(fields.zone, 'zone');
+      this.requireCommands();
+      await this.clearOverride(zone);
       return undefined;
     });
   }

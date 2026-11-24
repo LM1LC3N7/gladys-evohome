@@ -10,6 +10,20 @@ the notes of the version's GitHub Release.
 
 ## [Unreleased]
 
+### Added
+
+- **Allow the commands** option, off by default: until it is on, a zone
+  setpoint, a system mode, the hot water on or Boost and "back to the
+  schedule" are refused from the dashboard and the scenes, with a message.
+  The system mode **Heating off**, a zone **off** and the hot water **off**
+  always work. Turn it on to drive the heating from Gladys.
+
+### Changed
+
+- Integration SDK 0.16.1; the devices say `should_poll: false` (Gladys 5.3
+  never polls them, the integration reads the cloud itself); the test runner
+  stops a hanging test after 60 s.
+
 ## [0.1.1] - 2026-10-16
 
 ### Added

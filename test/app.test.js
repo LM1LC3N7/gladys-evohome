@@ -29,8 +29,10 @@ import {
   zoneOf,
 } from './fixtures/evohome.js';
 import { fakeEvohome, memoryStore, settle } from './helpers/fakeEvohome.js';
+import { assertCoreDevice } from './helpers/coreFeature.js';
 
-const CONFIG = { email: EMAIL, password: PASSWORD };
+const CONFIG = { email: EMAIL, password: PASSWORD, allow_commands: true };
+const READ_ONLY = { email: EMAIL, password: PASSWORD };
 const sys = (id = SYSTEM) => `ext:test-integration:system:${id}`;
 const zone = (id) => `ext:test-integration:zone:${id}`;
 const dhw = () => `ext:test-integration:dhw:${DHW}`;
@@ -351,6 +353,82 @@ test('the hot water: off, boost for the configured time, back to its schedule', 
   assert.deepEqual(server.puts().at(-1).body, { mode: 'PermanentOverride', state: 'On' });
   await set(gladys, dhw(), 'mode', 6);
   assert.deepEqual(server.puts().at(-1).body, { mode: 'FollowSchedule' });
+});
+
+test('without "Allow the commands": heating refused, nothing sent; off always goes', async (t) => {
+  const { gladys, server } = await setup(t, { config: READ_ONLY });
+  await createAll(gladys);
+  const puts = server.puts().length;
+  for (const [id, role, value] of [
+    [zone(ZONES.LIVING), 'setpoint', 21],
+    [zone(ZONES.LIVING), 'heating-mode', 1],
+    [zone(ZONES.KITCHEN), 'setpoint-mode', 'PermanentOverride'],
+    [zone(ZONES.BEDROOM), 'setpoint-mode', 'FollowSchedule'],
+    [sys(), 'mode', 'Auto'],
+    [sys(), 'mode', 'Away'],
+    [dhw(), 'state', 1],
+    [dhw(), 'mode', 3],
+    [dhw(), 'mode', 4],
+    [dhw(), 'mode', 6],
+  ]) {
+    const ack = await set(gladys, id, role, value);
+    assert.equal(ack.success, false, `${id} ${role}=${value}`);
+    assert.match(ack.error, /Autoriser les commandes/);
+  }
+  for (const [action, fields] of [
+    [SCENE_ACTIONS.SET_SYSTEM_MODE, { mode: 'Away', days: 2 }],
+    [SCENE_ACTIONS.SET_ZONE_SETPOINT, { zone: zone(ZONES.KITCHEN), temperature: 19 }],
+    [SCENE_ACTIONS.CLEAR_ZONE_OVERRIDE, { zone: zone(ZONES.BEDROOM) }],
+    [SCENE_ACTIONS.SET_HOT_WATER, { hot_water: dhw(), state: 'on' }],
+    [SCENE_ACTIONS.SET_HOT_WATER, { hot_water: dhw(), state: 'auto' }],
+  ]) {
+    const ack = await gladys.fake.sceneAction(action, fields);
+    assert.equal(ack.success, false, action);
+    assert.match(ack.error, /Autoriser les commandes/);
+  }
+  assert.equal(server.puts().length, puts, 'nothing sent to Evohome');
+
+  // Switching off never needs the option.
+  await set(gladys, zone(ZONES.LIVING), 'heating-mode', 0);
+  assert.deepEqual(server.puts().at(-1).body, {
+    setpointMode: 'PermanentOverride',
+    heatSetpointValue: 5,
+  });
+  assert.equal((await set(gladys, sys(), 'mode', 'HeatingOff')).success, true);
+  assert.deepEqual(server.puts().at(-1).body, { systemMode: 'HeatingOff', permanent: true });
+  assert.equal((await set(gladys, dhw(), 'state', 0)).success, true);
+  assert.deepEqual(server.puts().at(-1).body, { mode: 'PermanentOverride', state: 'Off' });
+  assert.equal((await set(gladys, dhw(), 'mode', 0)).success, true);
+  let ack = await gladys.fake.sceneAction(SCENE_ACTIONS.SET_SYSTEM_MODE, { mode: 'HeatingOff' });
+  assert.equal(ack.success, true, ack.error);
+  ack = await gladys.fake.sceneAction(SCENE_ACTIONS.SET_HOT_WATER, {
+    hot_water: dhw(),
+    state: 'off',
+  });
+  assert.equal(ack.success, true, ack.error);
+  assert.equal(server.puts().length, puts + 6);
+
+  // Turned on from the configuration screen: the next setpoint goes.
+  await gladys.fake.configUpdated(CONFIG);
+  await settle();
+  ack = await set(gladys, zone(ZONES.LIVING), 'setpoint', 21);
+  assert.equal(ack.success, true, ack.error);
+  assert.equal(server.puts().at(-1).body.heatSetpointValue, 21);
+});
+
+test('every feature has a numeric min and max and the other core fields, in both languages', async (t) => {
+  for (const language of ['fr', 'en']) {
+    await t.test(language, async (tt) => {
+      const { gladys } = await setup(tt, { config: { ...CONFIG, language } });
+      let features = 0;
+      for (const device of gladys.fake.discoveredDevices) {
+        features += assertCoreDevice(device, `${language} ${device.external_id}`);
+        assert.equal(device.should_poll, false, device.external_id);
+      }
+      assert.ok(gladys.fake.discoveredDevices.length >= 3);
+      assert.ok(features > gladys.fake.discoveredDevices.length, String(features));
+    });
+  }
 });
 
 test('a refused command fails its ack and Gladys gets the real value back', async (t) => {

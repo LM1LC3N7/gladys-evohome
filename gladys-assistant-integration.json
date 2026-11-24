@@ -21,8 +21,8 @@
         "fr": "Votre compte Total Connect Comfort"
       },
       "description": {
-        "en": "Brings your Honeywell / Resideo Evohome system into Gladys through the international Total Connect Comfort cloud (the one of the Evohome app, Europe): each heating zone with its temperature and setpoint, the system mode (Auto, Economy, Away, Day off, Custom, Heating off), the hot water, the faults, plus scene actions and triggers. Enter the e-mail and password of the app, then add the devices from the Discovery tab. Read every 5 minutes by default: Honeywell limits sign-ins and requests. For the US and Canada portal (mytotalconnectcomfort.com) or the Honeywell Home app (Lyric, T-series), use the other Honeywell integrations of the store. Unofficial, not affiliated with Honeywell or Resideo.",
-        "fr": "Amène votre système Honeywell / Resideo Evohome dans Gladys par le cloud Total Connect Comfort international (celui de l'application Evohome, Europe) : chaque zone de chauffage avec sa température et sa consigne, le mode du système (Auto, Économie, Absent, Jour de congé, Personnalisé, Chauffage arrêté), l'eau chaude, les défauts, et des actions et déclencheurs de scène. Saisissez l'e-mail et le mot de passe de l'application, puis ajoutez les appareils depuis l'onglet Découverte. Lu toutes les 5 minutes par défaut : Honeywell limite les connexions et les requêtes. Pour le portail États-Unis et Canada (mytotalconnectcomfort.com) ou l'application Honeywell Home (Lyric, série T), utilisez les autres intégrations Honeywell du store. Non officiel, sans lien avec Honeywell ni Resideo."
+        "en": "Brings your Honeywell / Resideo Evohome system into Gladys through the international Total Connect Comfort cloud (the one of the Evohome app, Europe): each heating zone with its temperature and setpoint, the system mode (Auto, Economy, Away, Day off, Custom, Heating off), the hot water, the faults, plus scene actions and triggers. Enter the e-mail and password of the app, then add the devices from the Discovery tab. Setpoints, modes and the hot water stay read only until you allow the commands below; switching the heating, a zone or the hot water off always works. Read every 5 minutes by default: Honeywell limits sign-ins and requests. For the US and Canada portal (mytotalconnectcomfort.com) or the Honeywell Home app (Lyric, T-series), use the other Honeywell integrations of the store. Unofficial, not affiliated with Honeywell or Resideo.",
+        "fr": "Amène votre système Honeywell / Resideo Evohome dans Gladys par le cloud Total Connect Comfort international (celui de l'application Evohome, Europe) : chaque zone de chauffage avec sa température et sa consigne, le mode du système (Auto, Économie, Absent, Jour de congé, Personnalisé, Chauffage arrêté), l'eau chaude, les défauts, et des actions et déclencheurs de scène. Saisissez l'e-mail et le mot de passe de l'application, puis ajoutez les appareils depuis l'onglet Découverte. Consignes, modes et eau chaude restent en lecture seule tant que vous n'autorisez pas les commandes ci-dessous ; arrêter le chauffage, une zone ou l'eau chaude marche toujours. Lu toutes les 5 minutes par défaut : Honeywell limite les connexions et les requêtes. Pour le portail États-Unis et Canada (mytotalconnectcomfort.com) ou l'application Honeywell Home (Lyric, série T), utilisez les autres intégrations Honeywell du store. Non officiel, sans lien avec Honeywell ni Resideo."
       },
       "links": [
         {
@@ -195,6 +195,20 @@
           }
         }
       ]
+    },
+    {
+      "key": "allow_commands",
+      "type": "boolean",
+      "label": {
+        "en": "Allow the commands",
+        "fr": "Autoriser les commandes"
+      },
+      "description": {
+        "en": "Off by default: everything is shown, nothing heats up from Gladys. On: a dashboard or a scene can set a zone setpoint, a system mode, the hot water on or Boost, and put a zone or the hot water back on its schedule. The system mode Heating off, a zone off and the hot water off always work.",
+        "fr": "Désactivé par défaut : tout est affiché, rien ne chauffe depuis Gladys. Activé : un tableau de bord ou une scène peut régler une consigne de zone, un mode du système, l'eau chaude en marche ou en Boost, et remettre une zone ou l'eau chaude sur son programme. Le mode Chauffage arrêté, une zone à l'arrêt et l'eau chaude arrêtée marchent toujours."
+      },
+      "required": false,
+      "default": false
     }
   ],
   "actions": [

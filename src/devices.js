@@ -158,6 +158,7 @@ function systemDevice(gladys, system, language) {
   return {
     name: systemName(system, language),
     external_id: ids.device,
+    should_poll: false,
     features: [
       feature(ids, 'system', 'mode', language, {
         supported_options: options(
@@ -183,6 +184,7 @@ function zoneDevice(gladys, system, zone, language) {
   return {
     name: zoneName(zone, language),
     external_id: ids.device,
+    should_poll: false,
     features: [
       feature(ids, 'zone', 'temperature', language),
       feature(ids, 'zone', 'setpoint', language, { min: zone.min, max: zone.max }),
@@ -213,6 +215,7 @@ function dhwDevice(gladys, system, dhw, language) {
   return {
     name: dhwName(dhw, language),
     external_id: ids.device,
+    should_poll: false,
     features: [
       feature(ids, 'dhw', 'temperature', language),
       feature(ids, 'dhw', 'state', language),

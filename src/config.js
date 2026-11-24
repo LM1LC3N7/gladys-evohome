@@ -13,6 +13,7 @@ export const DEFAULTS = {
   dhw_boost_duration: DURATIONS.boost.default,
   poll_interval: POLL_INTERVAL.default,
   language: 'fr',
+  allow_commands: false,
 };
 
 export const LANGUAGES = ['fr', 'en'];
@@ -48,5 +49,8 @@ export function normalizeConfig(raw = {}) {
     boostDuration: bounded(raw?.dhw_boost_duration, DURATIONS.boost),
     pollInterval: bounded(raw?.poll_interval, POLL_INTERVAL),
     language: LANGUAGES.includes(language) ? language : DEFAULTS.language,
+    // Heating up from Gladys (setpoints, modes, hot water on, back to the
+    // schedule): off until the user says so. Switching off never needs it.
+    allowCommands: raw?.allow_commands === true || raw?.allow_commands === 'true',
   };
 }

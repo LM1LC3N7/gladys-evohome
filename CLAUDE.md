@@ -8,7 +8,7 @@ already taken and the next milestones.
 
 A Gladys Assistant **external integration** of type `device`: a Node.js
 service (Node 22+, ESM, no build step) in its own sandboxed Docker container,
-talking to Gladys through `@gladysassistant/integration-sdk` (v0.15), its only
+talking to Gladys through `@gladysassistant/integration-sdk` (v0.16), its only
 runtime dependency (HTTPS goes through `node:https`). It signs in to the
 international Total Connect Comfort cloud (the one of the Evohome app) with
 the e-mail and password of the app, reads the installation of one location
@@ -21,7 +21,7 @@ changes and faults. Unofficial, not affiliated with Honeywell or Resideo.
 
 ```bash
 npm install
-npm test                                  # node --test, the built-in runner
+npm test                                  # node --test --test-timeout=60000
 node --test test/app.test.js              # one file
 npm run lint                              # ESLint
 npm run format:check                      # Prettier, as the CI runs it
@@ -56,6 +56,17 @@ test/helpers/       a fake Total Connect Comfort behind the transport
 
 ## Rules
 
+- **Nothing heats without the option.** `allow_commands` (off by default) gates
+  zone setpoints, setpoint modes, system modes, hot water on/Boost/auto and
+  back to the schedule (`requireCommands`, src/app.js), from the dashboard and
+  the scenes. Switching off never needs it: system mode HeatingOff, a zone
+  off (its minimum, permanent), the hot water off.
+- **Features follow the core model.** Every feature has a non-empty `name`, a
+  numeric `min` and `max` (0/0 for text and buttons), boolean `read_only` and
+  `has_feedback`: Gladys refuses it otherwise, and the SDK's fake Gladys
+  (0.16.1) too; `test/helpers/coreFeature.js` checks every device of the fixture location, in both languages.
+  Devices carry `should_poll: false` (Gladys 5.3 polls a device with
+  `poll_frequency` unless it says so).
 - **External ids are forever**: device = `system:<id>`, `zone:<id>`,
   `dhw:<id>` (the ids of the cloud), feature = `<device>:<role>` (`mode`,
   `mode-until`, `temperature`, `setpoint`, `heating-mode`, `setpoint-mode`,

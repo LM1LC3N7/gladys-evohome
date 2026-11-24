@@ -101,6 +101,10 @@ export const T = {
     en: `No location "${wanted}" in this account (locations: ${names}). Fix the Location field.`,
     fr: `Aucun emplacement « ${wanted} » dans ce compte (emplacements : ${names}). Corrigez le champ Emplacement.`,
   }),
+  commandsDisabled: {
+    en: 'Commands from Gladys are off: turn "Allow the commands" on in the configuration. Heating off, hot water off and a zone off always work.',
+    fr: "Les commandes depuis Gladys sont désactivées : activez « Autoriser les commandes » dans la configuration. Chauffage arrêté, eau chaude arrêtée et une zone à l'arrêt marchent toujours.",
+  },
   refused: {
     en: 'Total Connect Comfort refused the e-mail or password: check them in the configuration (the integration waits for a change).',
     fr: "Total Connect Comfort a refusé l'e-mail ou le mot de passe : vérifiez-les dans la configuration (l'intégration attend une modification).",

@@ -131,6 +131,15 @@ blocage d'une heure a été signalé). L'intégration :
 | Durée du boost d'eau chaude (min)        | 60                | durée de marche de l'eau chaude en Boost (10 à 1440)                  |
 | Intervalle de rafraîchissement (s)       | 300               | fréquence de lecture de l'état (60 à 3600)                            |
 | Langue des noms des fonctionnalités      | Français          | noms des fonctionnalités et des modes des appareils ajoutés désormais |
+| Autoriser les commandes                  | désactivé         | consignes, modes, eau chaude en marche et retour au programme         |
+
+Tant qu'**Autoriser les commandes** est désactivé, le tableau de bord et les
+scènes ne font que lire : une consigne de zone, un mode du système, l'eau
+chaude en marche ou en Boost, « Suit le programme » et « Retour au programme »
+sont refusés avec un message. Arrêter n'en a jamais besoin : le mode
+**Chauffage arrêté**, une zone à l'**arrêt** (tenue à son minimum) et l'eau
+chaude **arrêtée** marchent toujours, donc une scène « tout éteindre »
+continue de fonctionner.
 
 ## Dépannage
 
