@@ -128,8 +128,11 @@ Until **Allow the commands** is on, the dashboard and the scenes only read:
 a zone setpoint, a system mode, the hot water on or Boost, "Follow schedule"
 and "Back to the schedule" are refused with a message. Switching off never
 needs it: the system mode **Heating off**, a zone **off** (held at its
-minimum) and the hot water **off** always work, so a "turn everything off"
-scene keeps working.
+minimum), a setpoint **at the zone minimum** (the frost floor, 5 °C by
+default) and the hot water **off** always work, so a "turn everything off"
+scene keeps working. The only refusals of a stop are inherent: before the
+first read of the installation (the zones and their minimum come from it)
+and after a refused password.
 
 ## Troubleshooting
 

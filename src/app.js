@@ -682,13 +682,33 @@ export class EvohomeApp {
     }
   }
 
+  /**
+   * A setpoint at (or under) the zone's minimum is the frost floor: a stop,
+   * never behind the option. Anything above needs "Allow the commands".
+   */
+  requireCommandsFor(zone, value) {
+    const rounded = Math.round(value / zone.step) * zone.step;
+    if (!(Number.isFinite(value) && rounded <= zone.min)) {
+      this.requireCommands();
+    }
+  }
+
+  /**
+   * The client options of a request that heats: the option is checked once
+   * more right before the request leaves (a sign-in may have taken a while).
+   * `gated` false (a stop): no check.
+   */
+  gate(gated = true) {
+    return gated ? { beforeSend: () => this.requireCommands() } : {};
+  }
+
   async command(entry, value) {
     const { kind, role, entity } = entry;
     if (kind === 'system' && role === 'mode') {
       return this.setSystemMode(entity, String(value));
     }
     if (kind === 'zone' && role === 'setpoint') {
-      this.requireCommands();
+      this.requireCommandsFor(entity, Number(value));
       return this.setSetpoint(entity, Number(value));
     }
     if (kind === 'zone' && role === 'heating-mode') {
@@ -739,7 +759,7 @@ export class EvohomeApp {
     if (until !== undefined && !allowed.temporary) {
       throw userError(T.temporaryNotAllowed(word(SYSTEM_MODE_NAMES[mode], language)), language);
     }
-    await this.client.setSystemMode(system.id, { mode, until });
+    await this.client.setSystemMode(system.id, { mode, until }, this.gate(mode !== 'HeatingOff'));
     this.logger.info(`${systemName(system, 'en')}: mode ${mode}`);
     // A reset puts the zones back on their schedule, and reads as Auto.
     const shown = mode === 'AutoWithReset' ? 'Auto' : mode;
@@ -767,14 +787,18 @@ export class EvohomeApp {
         ? undefined
         : overrideUntil(zone, minutes ?? this.config.overrideDuration, this.now());
     const mode = until === undefined ? SETPOINT_MODES.PERMANENT : SETPOINT_MODES.TEMPORARY;
-    await this.client.setZoneSetpoint(zone.id, { mode, setpoint, until });
+    await this.client.setZoneSetpoint(
+      zone.id,
+      { mode, setpoint, until },
+      this.gate(setpoint > zone.min),
+    );
     this.logger.info(`${zone.name}: ${setpoint} °C, ${mode}`);
     await this.commanded('zone', zone.id, { setpoint, setpointMode: mode, until });
     return until;
   }
 
   async clearOverride(zone) {
-    await this.client.setZoneSetpoint(zone.id, { mode: SETPOINT_MODES.FOLLOW });
+    await this.client.setZoneSetpoint(zone.id, { mode: SETPOINT_MODES.FOLLOW }, this.gate());
     this.logger.info(`${zone.name}: back to its schedule`);
     await this.commanded('zone', zone.id, {
       setpointMode: SETPOINT_MODES.FOLLOW,
@@ -803,7 +827,7 @@ export class EvohomeApp {
       this.requireCommands();
     }
     if (choice === 'auto') {
-      await this.client.setDhwState(dhw.id, { mode: SETPOINT_MODES.FOLLOW });
+      await this.client.setDhwState(dhw.id, { mode: SETPOINT_MODES.FOLLOW }, this.gate());
       this.logger.info('Hot water: back to its schedule');
       await this.commanded('dhw', dhw.id, { mode: SETPOINT_MODES.FOLLOW, until: undefined });
       return undefined;
@@ -812,7 +836,7 @@ export class EvohomeApp {
     const canTemporary = dhw.modes.includes(SETPOINT_MODES.TEMPORARY);
     const until = minutes && canTemporary ? overrideUntil(dhw, minutes, this.now()) : undefined;
     const mode = until === undefined ? SETPOINT_MODES.PERMANENT : SETPOINT_MODES.TEMPORARY;
-    await this.client.setDhwState(dhw.id, { mode, state, until });
+    await this.client.setDhwState(dhw.id, { mode, state, until }, this.gate(choice !== 'off'));
     this.logger.info(`Hot water: ${state}, ${mode}`);
     await this.commanded('dhw', dhw.id, { state, mode, until });
     return until;
@@ -854,7 +878,7 @@ export class EvohomeApp {
   sceneZoneSetpoint(fields = {}) {
     return this.sceneAction(() => {
       const zone = this.sceneTarget(fields.zone, 'zone');
-      this.requireCommands();
+      this.requireCommandsFor(zone, Number(fields.temperature));
       const minutes = Number(fields.minutes);
       return this.setSetpoint(zone, Number(fields.temperature), {
         minutes:

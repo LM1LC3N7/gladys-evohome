@@ -82,6 +82,13 @@ up to date at the end of every milestone.
 
 ## Decisions
 
+- **Commands behind `allow_commands`** (wave 15, review r1): setpoints, modes,
+  hot water on/Boost/auto and back to the schedule need the option, checked
+  when decided and again right before the request leaves. Stops never do:
+  HeatingOff, a zone off, a setpoint at the zone minimum (frost floor), the
+  hot water off. A stop is still refused before the first read of the
+  installation and after a refused password (inherent).
+
 - **Not a duplicate** (checked 2026-10-16):
   - Gladys core master `165e0d94` (2026-10-16): `git grep -i
 'evohome|resideo|honeywell|total connect|tccna'` finds nothing in

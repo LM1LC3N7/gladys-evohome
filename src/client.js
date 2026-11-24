@@ -194,8 +194,14 @@ export class EvohomeClient {
     return answer.body;
   }
 
-  async call(method, path, payload) {
+  /**
+   * One request with a valid token. `beforeSend` runs right before the
+   * request leaves (after the token, and again before the retry): a command
+   * re-checks its option there, and what it throws is never sent.
+   */
+  async call(method, path, payload, { beforeSend } = {}) {
     const token = await this.token();
+    beforeSend?.();
     try {
       return await this.send(method, path, token, payload);
     } catch (err) {
@@ -206,7 +212,9 @@ export class EvohomeClient {
       if (this.session?.accessToken === token) {
         this.session.accessToken = null;
       }
-      return this.send(method, path, await this.token(), payload);
+      const renewed = await this.token();
+      beforeSend?.();
+      return this.send(method, path, renewed, payload);
     }
   }
 
@@ -239,16 +247,16 @@ export class EvohomeClient {
   }
 
   /** The system mode, permanent (`until` undefined) or until a time. */
-  setSystemMode(systemId, { mode, until }) {
+  setSystemMode(systemId, { mode, until }, options) {
     const body = { systemMode: mode, permanent: until === undefined };
     if (until !== undefined) {
       body.timeUntil = apiDate(until);
     }
-    return this.call('PUT', PATHS.systemMode(systemId), body);
+    return this.call('PUT', PATHS.systemMode(systemId), body, options);
   }
 
   /** A zone setpoint (Permanent or TemporaryOverride with `until`), or FollowSchedule. */
-  setZoneSetpoint(zoneId, { mode, setpoint, until }) {
+  setZoneSetpoint(zoneId, { mode, setpoint, until }, options) {
     const body = { setpointMode: mode };
     if (setpoint !== undefined) {
       body.heatSetpointValue = setpoint;
@@ -256,11 +264,11 @@ export class EvohomeClient {
     if (until !== undefined) {
       body.timeUntil = apiDate(until);
     }
-    return this.call('PUT', PATHS.zoneSetpoint(zoneId), body);
+    return this.call('PUT', PATHS.zoneSetpoint(zoneId), body, options);
   }
 
   /** The hot water On or Off (Permanent or TemporaryOverride with `until`), or FollowSchedule. */
-  setDhwState(dhwId, { mode, state, until }) {
+  setDhwState(dhwId, { mode, state, until }, options) {
     const body = { mode };
     if (state !== undefined) {
       body.state = state;
@@ -269,6 +277,6 @@ export class EvohomeClient {
       // untilTime here, timeUntil for the zones and the system (evohome-async).
       body.untilTime = apiDate(until);
     }
-    return this.call('PUT', PATHS.dhwState(dhwId), body);
+    return this.call('PUT', PATHS.dhwState(dhwId), body, options);
   }
 }

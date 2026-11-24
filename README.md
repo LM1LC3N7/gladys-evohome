@@ -36,8 +36,10 @@ Gladys ⇄ SDK ⇄ src/handlers.js ⇄ src/app.js (EvohomeApp) ⇄ src/client.js
 ```
 
 - **Commands**: behind "Allow the commands" (off by default): zone setpoints,
-  system modes, hot water on/Boost, back to the schedule. Heating off, a zone
-  off and the hot water off always go (`requireCommands` in `src/app.js`).
+  system modes, hot water on/Boost, back to the schedule, checked again right
+  before the request leaves. Heating off, a zone off, a setpoint at the zone
+  minimum and the hot water off always go (`requireCommands`,
+  `requireCommandsFor` in `src/app.js`).
 - **Account**: e-mail and password of the Evohome app (`secret` field).
   `POST /Auth/OAuth/Token` with the app's client id (password grant, scope
   `EMEA-V1-Basic EMEA-V1-Anonymous`) returns an access token (~30 minutes)
@@ -70,7 +72,7 @@ domesticHotWater/{id}/state` `{mode, state, untilTime}`. A value just set
 
 ```bash
 npm install
-npm test                                        # node --test, no network
+npm test                                        # node --test --test-timeout=60000, no network
 npm run lint && npm run format:check
 npm run audit
 npx github:GladysAssistant/integration-store .  # store admission checks

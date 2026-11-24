@@ -33,6 +33,8 @@ import { assertCoreDevice } from './helpers/coreFeature.js';
 
 const CONFIG = { email: EMAIL, password: PASSWORD, allow_commands: true };
 const READ_ONLY = { email: EMAIL, password: PASSWORD };
+/** The features of the system, the zones and the hot water of the fixture location. */
+const FEATURE_COUNT = 35;
 const sys = (id = SYSTEM) => `ext:test-integration:system:${id}`;
 const zone = (id) => `ext:test-integration:zone:${id}`;
 const dhw = () => `ext:test-integration:dhw:${DHW}`;
@@ -414,6 +416,97 @@ test('without "Allow the commands": heating refused, nothing sent; off always go
   ack = await set(gladys, zone(ZONES.LIVING), 'setpoint', 21);
   assert.equal(ack.success, true, ack.error);
   assert.equal(server.puts().at(-1).body.heatSetpointValue, 21);
+  // Turned off again, without a restart: refused once more.
+  await gladys.fake.configUpdated(READ_ONLY);
+  await settle();
+  const sent = server.puts().length;
+  ack = await set(gladys, zone(ZONES.LIVING), 'setpoint', 22);
+  assert.equal(ack.success, false);
+  assert.match(ack.error, /Autoriser les commandes/);
+  assert.equal(server.puts().length, sent);
+});
+
+test('a setpoint at the zone minimum (frost floor) never needs the option, above it does', async (t) => {
+  const { gladys, server } = await setup(t, { config: READ_ONLY });
+  await createAll(gladys);
+  const puts = server.puts().length;
+  // Dashboard: temporary (default) and, rounded to the step, 5.2 -> 5.
+  let ack = await set(gladys, zone(ZONES.LIVING), 'setpoint', 5);
+  assert.equal(ack.success, true, ack.error);
+  assert.deepEqual(server.puts().at(-1).body, {
+    setpointMode: 'TemporaryOverride',
+    heatSetpointValue: 5,
+    timeUntil: iso(NOW + 60 * MINUTE),
+  });
+  ack = await set(gladys, zone(ZONES.LIVING), 'setpoint', '5.2');
+  assert.equal(ack.success, true, ack.error);
+  assert.equal(server.puts().at(-1).body.heatSetpointValue, 5);
+  // Scene: permanent (minutes 0) and temporary.
+  ack = await gladys.fake.sceneAction(SCENE_ACTIONS.SET_ZONE_SETPOINT, {
+    zone: zone(ZONES.KITCHEN),
+    temperature: 5,
+    minutes: 0,
+  });
+  assert.equal(ack.success, true, ack.error);
+  assert.deepEqual(server.puts().at(-1).body, {
+    setpointMode: 'PermanentOverride',
+    heatSetpointValue: 5,
+  });
+  ack = await gladys.fake.sceneAction(SCENE_ACTIONS.SET_ZONE_SETPOINT, {
+    zone: zone(ZONES.KITCHEN),
+    temperature: 5,
+    minutes: 30,
+  });
+  assert.equal(ack.success, true, ack.error);
+  assert.equal(server.puts().at(-1).body.timeUntil, iso(NOW + 30 * MINUTE));
+  assert.equal(server.puts().length, puts + 4);
+  // Half a degree above the floor heats: refused, nothing sent.
+  for (const value of [5.5, 5.3, 6, 21]) {
+    ack = await set(gladys, zone(ZONES.LIVING), 'setpoint', value);
+    assert.equal(ack.success, false, String(value));
+    assert.match(ack.error, /Autoriser les commandes/);
+  }
+  ack = await gladys.fake.sceneAction(SCENE_ACTIONS.SET_ZONE_SETPOINT, {
+    zone: zone(ZONES.KITCHEN),
+    temperature: 5.5,
+  });
+  assert.equal(ack.success, false);
+  assert.match(ack.error, /Autoriser les commandes/);
+  // Under the floor: the range check, not the option.
+  ack = await set(gladys, zone(ZONES.LIVING), 'setpoint', 4);
+  assert.equal(ack.success, false);
+  assert.match(ack.error, /entre 5 et 35/);
+  assert.equal(server.puts().length, puts + 4, 'nothing else sent');
+});
+
+test('the option is checked again right before the request leaves (slow sign-in)', async (t) => {
+  const { gladys, server, app } = await setup(t, { config: CONFIG });
+  await createAll(gladys);
+  const puts = server.puts().length;
+  // The token is fetched first: the option is turned off meanwhile.
+  const token = app.client.token.bind(app.client);
+  app.client.token = async () => {
+    await gladys.fake.configUpdated(READ_ONLY);
+    return token();
+  };
+  for (const [id, role, value] of [
+    [zone(ZONES.LIVING), 'setpoint', 21],
+    [sys(), 'mode', 'Away'],
+    [dhw(), 'state', 1],
+    [zone(ZONES.BEDROOM), 'setpoint-mode', 'FollowSchedule'],
+  ]) {
+    await gladys.fake.configUpdated(CONFIG);
+    await settle();
+    const ack = await set(gladys, id, role, value);
+    assert.equal(ack.success, false, `${id} ${role}`);
+    assert.match(ack.error, /Autoriser les commandes/);
+  }
+  assert.equal(server.puts().length, puts, 'nothing sent');
+  // The stops still leave.
+  assert.equal((await set(gladys, sys(), 'mode', 'HeatingOff')).success, true);
+  assert.equal((await set(gladys, dhw(), 'state', 0)).success, true);
+  assert.equal((await set(gladys, zone(ZONES.LIVING), 'heating-mode', 0)).success, true);
+  assert.equal(server.puts().length, puts + 3);
 });
 
 test('every feature has a numeric min and max and the other core fields, in both languages', async (t) => {
@@ -426,7 +519,7 @@ test('every feature has a numeric min and max and the other core fields, in both
         assert.equal(device.should_poll, false, device.external_id);
       }
       assert.ok(gladys.fake.discoveredDevices.length >= 3);
-      assert.ok(features > gladys.fake.discoveredDevices.length, String(features));
+      assert.equal(features, FEATURE_COUNT);
     });
   }
 });

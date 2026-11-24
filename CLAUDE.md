@@ -59,8 +59,11 @@ test/helpers/       a fake Total Connect Comfort behind the transport
 - **Nothing heats without the option.** `allow_commands` (off by default) gates
   zone setpoints, setpoint modes, system modes, hot water on/Boost/auto and
   back to the schedule (`requireCommands`, src/app.js), from the dashboard and
-  the scenes. Switching off never needs it: system mode HeatingOff, a zone
-  off (its minimum, permanent), the hot water off.
+  the scenes, once when decided and again right before the request leaves
+  (`gate()` → `beforeSend` of `client.call`, after the token). Switching off
+  never needs it: system mode HeatingOff, a zone off (its minimum, permanent),
+  a setpoint ≤ the zone minimum (`requireCommandsFor`, frost floor), the hot
+  water off.
 - **Features follow the core model.** Every feature has a non-empty `name`, a
   numeric `min` and `max` (0/0 for text and buttons), boolean `read_only` and
   `has_feedback`: Gladys refuses it otherwise, and the SDK's fake Gladys

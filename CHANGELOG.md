@@ -20,6 +20,10 @@ the notes of the version's GitHub Release.
 
 ### Changed
 
+- **Driving the heating from Gladys now needs the option above** (it worked
+  without it in 0.1.1): tick "Allow the commands" in the configuration if a
+  dashboard or a scene sets setpoints, modes or the hot water. A setpoint at
+  the zone minimum (the frost floor, 5 °C) counts as a stop and never needs it.
 - Integration SDK 0.16.1; the devices say `should_poll: false` (Gladys 5.3
   never polls them, the integration reads the cloud itself); the test runner
   stops a hanging test after 60 s.

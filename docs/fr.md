@@ -137,9 +137,12 @@ Tant qu'**Autoriser les commandes** est désactivé, le tableau de bord et les
 scènes ne font que lire : une consigne de zone, un mode du système, l'eau
 chaude en marche ou en Boost, « Suit le programme » et « Retour au programme »
 sont refusés avec un message. Arrêter n'en a jamais besoin : le mode
-**Chauffage arrêté**, une zone à l'**arrêt** (tenue à son minimum) et l'eau
-chaude **arrêtée** marchent toujours, donc une scène « tout éteindre »
-continue de fonctionner.
+**Chauffage arrêté**, une zone à l'**arrêt** (tenue à son minimum), une
+consigne **au minimum de la zone** (le plancher hors gel, 5 °C par défaut) et
+l'eau chaude **arrêtée** marchent toujours, donc une scène « tout éteindre »
+continue de fonctionner. Un arrêt n'est refusé que dans deux cas inhérents :
+avant la première lecture de l'installation (les zones et leur minimum en
+viennent) et après un mot de passe refusé.
 
 ## Dépannage
 
