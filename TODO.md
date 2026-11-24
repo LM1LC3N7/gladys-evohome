@@ -192,3 +192,7 @@ timeUntil}`, `{mode, state, untilTime}` (untilTime for the hot water only);
 - **Scene actions resolve `{ until }`** (ISO UTC, empty when permanent) for
   the next actions of a scene; errors come back in the language of the
   configuration.
+
+## Next patch
+
+- Migration review minors: see `_lots/migration-reviews/w15-gladys-evohome-r2.md`.
